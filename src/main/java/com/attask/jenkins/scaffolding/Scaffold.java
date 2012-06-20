@@ -11,6 +11,7 @@ import hudson.model.Saveable;
 import hudson.model.listeners.SaveableListener;
 import hudson.util.XStream2;
 import net.sf.json.JSON;
+import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -118,9 +119,11 @@ public class Scaffold extends AbstractDescribableImpl<Scaffold> implements Savea
 
     public static void delete(String name) {
         File file = new File(getRootDir(), name);
-        if(file.exists() && file.isDirectory()) {
-            if(!file.delete()) {
-                throw new RuntimeException("Could not delete " + name); //Todo: make better exception
+        if (file.exists() && file.isDirectory()) {
+            try {
+                FileUtils.forceDelete(file);
+            } catch (IOException e) {
+                throw new RuntimeException("Could not delete " + name, e); //Todo: make better exception
             }
         }
     }

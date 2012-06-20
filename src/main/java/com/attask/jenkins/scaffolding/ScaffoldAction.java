@@ -103,7 +103,7 @@ public class ScaffoldAction implements RootAction {
         scaffoldCache.remove(name);
         Scaffold.delete(name);
 
-        response.forwardToPreviousPage(request);
+        response.forward(this, "index", request);
     }
 
     public void doStandUpScaffold(StaplerRequest request, StaplerResponse response) throws IOException, ServletException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {

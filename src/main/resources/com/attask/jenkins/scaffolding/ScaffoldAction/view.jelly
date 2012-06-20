@@ -5,7 +5,22 @@
 			<div id="Templating-Scaffolding">
 				<j:set var="scaffold" value="${it.allScaffolding.get(request.getParameter('name'))}"/>
 				<h1>Scaffold ${scaffold.name}</h1>
-				${scaffold}
+
+                <div>
+                    <ul>
+                    <j:forEach var="varName" items="${scaffold.variables}">
+
+                        <li>
+                            ${varName}
+                        </li>
+
+                    </j:forEach>
+                    </ul>
+                </div>
+                <form method="post" action="deleteScaffold">
+                    <input type="hidden" name="name" value="${scaffold.name}" />
+                    <input type="submit" value="Delete this scaffold"/>
+                </form>
 				<!--TODO pretty up the page-->
 				<!--TODO delete button-->
 			</div>
