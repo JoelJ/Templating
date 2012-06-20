@@ -81,8 +81,10 @@ public class ScaffoldAction implements RootAction {
 			Scaffold scaffold = new Scaffold(name, Arrays.asList(jobNames), Arrays.asList(variableNames));
 			scaffoldCache.put(scaffold);
 			scaffold.save();
+			response.forward(this, "index", request);
+		} else {
+			response.forwardToPreviousPage(request);
 		}
-		response.forwardToPreviousPage(request);
 	}
 
 	public void doDeleteScaffold(StaplerRequest request, StaplerResponse response) throws IOException, ServletException {
