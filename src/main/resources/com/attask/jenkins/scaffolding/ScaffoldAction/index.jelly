@@ -28,7 +28,7 @@
 							<td class="pane">
 								<ul>
 									<j:forEach var="jobName" items="${scaffold.jobNames}">
-										<li><a href="${rootUrl}/job/${jobName}">${jobName}</a></li>
+										<li><a href="${rootUrl}/job/${jobName}" target="_window">${jobName}</a></li>
 									</j:forEach>
 								</ul>
 							</td>
