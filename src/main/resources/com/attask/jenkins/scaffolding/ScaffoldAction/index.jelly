@@ -24,7 +24,7 @@
 					<j:forEach var="scaffoldName" items="${it.allScaffolding.keySet()}">
                         <j:set var="scaffold" value="${it.allScaffolding.get(scaffoldName)}"/>
 						<tr>
-							<td class="pane"><a href="${scaffold.getName()}">${scaffold.getName()}</a></td>
+							<td class="pane"><a href="view?name=${scaffold.getName()}">${scaffold.getName()}</a></td>
 							<td class="pane">
 								<ul>
 									<j:forEach var="jobName" items="${scaffold.jobNames}">
