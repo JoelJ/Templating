@@ -25,16 +25,10 @@ import java.util.regex.Pattern;
  */
 @Extension
 public class ScaffoldAction implements RootAction {
-	private Map<String, Scaffold> scaffolding = new HashMap<String, Scaffold>(); //TODO: make this a persistent cache
+	private ScaffoldCache scaffoldCache = new ScaffoldCache();
 
-	public Map<String, Scaffold> getAllScaffolding() {
-		if(scaffolding.isEmpty()) {
-			scaffolding.put("One", new Scaffold("One", Arrays.asList("Job1", "Job2"), Arrays.asList("var1", "var2")));
-			scaffolding.put("Two", new Scaffold("Two", Arrays.asList("Job3", "Job4"), Arrays.asList("var3", "var4")));
-			scaffolding.put("Three", new Scaffold("Three", Arrays.asList("Job5", "Job6"), Arrays.asList("var5", "var6")));
-		}
-
-		return scaffolding;
+	public ScaffoldCache getAllScaffolding() {
+		return scaffoldCache;
 	}
 
 	public void doFindVariablesForJob(StaplerRequest request, StaplerResponse response) throws IOException, ServletException {
@@ -77,7 +71,7 @@ public class ScaffoldAction implements RootAction {
 		String[] variableNames = request.getParameterValues("variables");
 
 		Scaffold scaffold = new Scaffold(name, Arrays.asList(jobNames), Arrays.asList(variableNames));
-		scaffolding.put(scaffold.getName(), scaffold);
+        scaffoldCache.put(scaffold);
 
 		scaffold.save();
 
@@ -86,7 +80,8 @@ public class ScaffoldAction implements RootAction {
 
 	public void doDeleteScaffold(StaplerRequest request, StaplerResponse response) throws IOException, ServletException {
 		String name = request.getParameter("name");
-		scaffolding.remove(name);
+        scaffoldCache.remove(name);
+        Scaffold.delete(name);
 
 		response.forwardToPreviousPage(request);
 	}

@@ -1,16 +1,28 @@
 package com.attask.jenkins.scaffolding;
 
+import com.thoughtworks.xstream.XStream;
 import hudson.Extension;
+import hudson.XmlFile;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import hudson.model.Hudson;
+import hudson.model.Items;
 import hudson.model.Saveable;
+import hudson.model.listeners.SaveableListener;
+import hudson.util.XStream2;
+import net.sf.json.JSON;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: Joel Johnson
@@ -19,49 +31,105 @@ import java.util.List;
  */
 @ExportedBean
 public class Scaffold extends AbstractDescribableImpl<Scaffold> implements Saveable {
-	private String name;
-	private List<String> jobNames;
-	private List<String> variables;
+    private String name;
+    private List<String> jobNames;
+    private List<String> variables;
+    private static final XStream XSTREAM = new XStream2();
 
-	public Scaffold(String name, Collection<String> jobNames, Collection<String> variables) {
-		this.name = name;
-		this.jobNames = new ArrayList<String>(jobNames);
-		this.variables = new ArrayList<String>(variables);
-	}
+    public Scaffold(String name, Collection<String> jobNames, Collection<String> variables) {
+        this.name = name;
+        this.jobNames = new ArrayList<String>(jobNames);
+        this.variables = new ArrayList<String>(variables);
+    }
 
-	@Exported
-	public String getName() {
-		return name;
-	}
+    private Scaffold(String name) {
+        this(name, Collections.<String>emptyList(), Collections.<String>emptyList());
+    }
 
-	@Exported
-	public List<String> getJobNames() {
-		return jobNames;
-	}
+    public static Scaffold find(String name) throws IOException {
+        Scaffold scaffold = new Scaffold(name);
+        if (!scaffold.load()) {
+            scaffold = null;
+        }
+        return scaffold;
+    }
 
-	@Exported
-	public List<String> getVariables() {
-		return variables;
-	}
+    @Exported
+    public String getName() {
+        return name;
+    }
 
-	@Override
-	public String toString() {
-		return "Scaffold{" +
-				"name='" + name + '\'' +
-				", jobNames=" + jobNames +
-				", variables=" + variables +
-				'}';
-	}
+    @Exported
+    public List<String> getJobNames() {
+        return jobNames;
+    }
 
-	public void save() throws IOException {
-		//todo
-	}
+    @Exported
+    public List<String> getVariables() {
+        return variables;
+    }
 
-	@Extension
-	public static final class DescriptorImpl extends Descriptor<Scaffold> {
-		@Override
-		public String getDisplayName() {
-			return "Scaffolding";
-		}
-	}
+    @Override
+    public String toString() {
+        return "Scaffold{" +
+                "name='" + name + '\'' +
+                ", jobNames=" + jobNames +
+                ", variables=" + variables +
+                '}';
+    }
+
+    public void save() throws IOException {
+        getConfigFile().write(this);
+        SaveableListener.fireOnChange(this, getConfigFile());
+    }
+
+    public synchronized boolean load() throws IOException {
+        XmlFile config = getConfigFile();
+        if (config != null && config.exists()) {
+            config.unmarshal(this);
+            return true;
+        }
+        return false;
+
+
+    }
+
+    protected final XmlFile getConfigFile() {
+        return new XmlFile(XSTREAM, new File(getRootDir(), name + "/config.xml"));
+    }
+
+    protected static File getRootDir() {
+        return new File(Hudson.getInstance().getRootDir(), "Scaffolding");
+    }
+
+    public static Set<String> getAllNames() {
+        Set<String> result = new HashSet<String>();
+        File rootDir = getRootDir();
+        File[] directories = rootDir.listFiles(new FileFilter() {
+            public boolean accept(File file) {
+                return file.isDirectory();
+            }
+        });
+        for (File directory : directories) {
+            result.add(directory.getName());
+        }
+        return result;
+    }
+
+    public static void delete(String name) {
+        File file = new File(getRootDir(), name);
+        if(file.exists() && file.isDirectory()) {
+            if(!file.delete()) {
+                throw new RuntimeException("Could not delete " + name); //Todo: make better exception
+            }
+        }
+    }
+
+    @Extension
+    public static final class DescriptorImpl extends Descriptor<Scaffold> {
+        @Override
+        public String getDisplayName() {
+            return "Scaffolding";
+        }
+    }
 }

@@ -21,7 +21,8 @@
 						<th>Variables</th>
 						<th>Stand-up</th>
 					</tr>
-					<j:forEach var="scaffold" items="${it.allScaffolding.values()}">
+					<j:forEach var="scaffoldName" items="${it.allScaffolding.keySet()}">
+                        <j:set var="scaffold" value="${it.allScaffolding.get(scaffoldName)}"/>
 						<tr>
 							<td><a href="${scaffold.getName()}">${scaffold.getName()}</a></td>
 							<td>
