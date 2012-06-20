@@ -1,0 +1,11 @@
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+	<f:entry field="templateName">
+		<h4>Implementing Jobs:</h4>
+		<ul>
+			<j:forEach items="${instance.getImplementers()}" var="implementation">
+				<li><a href="${rootURL}/${implementation.url}" target="_window">${implementation.name}</a></li>
+			</j:forEach>
+		</ul>
+		<input type="hidden" value="${it.name}" name="templateName"/>
+	</f:entry>
+</j:jelly>

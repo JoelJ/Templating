@@ -1,0 +1,19 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+	<l:layout norefresh="true" title="${%New View}">
+		<st:include it="${app}" page="sidepanel.jelly" />
+		<l:main-panel>
+			<div id="Templating-Scaffolding">
+				<h1>Create New Scaffolding</h1>
+				<form method="post" action="../createScaffold">
+					<input name="name"/>
+					<div id="jobNames">
+						<input name="jobNames"/>
+						<button id="addJob">Add Job</button>
+					</div>
+					<div id="variableNames">
+					</div>
+				</form>
+			</div>
+		</l:main-panel>
+	</l:layout>
+</j:jelly>

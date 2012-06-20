@@ -1,0 +1,57 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+	<l:layout norefresh="true" title="Scaffolding">
+		<st:include it="${app}" page="sidepanel.jelly" />
+		<l:main-panel>
+			<div id="Templating-Scaffolding">
+				<style>
+					#Templating-Scaffolding td ul,
+					#Templating-Scaffolding .standupButton img,
+					#Templating-Scaffolding .standupButton {
+						display: block;
+						margin-left: auto;
+						margin-right: auto;
+					}
+				</style>
+
+				<h1>Scaffolding</h1>
+				<table class="pane bigtable sortable">
+					<tr>
+						<th>Name</th>
+						<th>Jobs</th>
+						<th>Variables</th>
+						<th>Stand-up</th>
+					</tr>
+					<j:forEach var="scaffold" items="${it.allScaffolding.values()}">
+						<tr>
+							<td><a href="${scaffold.getName()}">${scaffold.getName()}</a></td>
+							<td>
+								<ul>
+									<j:forEach var="jobName" items="${scaffold.jobNames}">
+										<li><a href="${rootUrl}/job/${jobName}">${jobName}</a></li>
+									</j:forEach>
+								</ul>
+							</td>
+							<td>
+								<j:forEach var="variable" items="${scaffold.variables}">
+									<li>${variable}</li>
+								</j:forEach>
+							</td>
+							<td>
+								<a href="standUp?name=${scaffold.name}" class="standupButton">
+									<img src="${rootUrl}/images/24x24/gear.gif"/>
+								</a>
+							</td>
+						</tr>
+					</j:forEach>
+					<tr>
+						<td colspan="4">
+							<form method="get" action="create">
+								<input type="submit" value="+" />
+							</form>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</l:main-panel>
+	</l:layout>
+</j:jelly>

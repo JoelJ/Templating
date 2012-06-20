@@ -1,0 +1,15 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+	<f:entry title="Template Name" field="templateName">
+		<f:textbox id="templateName"/>
+	</f:entry>
+	<f:entry field="implementationName">
+		<input type="hidden" value="${it.name}" name="implementationName"/>
+	</f:entry>
+	<f:entry title="Variables" field="variables">
+		<f:textarea/>
+	</f:entry>
+
+	<script>
+
+	</script>
+</j:jelly>
