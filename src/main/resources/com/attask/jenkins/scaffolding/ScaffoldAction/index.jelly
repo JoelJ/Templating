@@ -24,20 +24,20 @@
 					<j:forEach var="scaffoldName" items="${it.allScaffolding.keySet()}">
                         <j:set var="scaffold" value="${it.allScaffolding.get(scaffoldName)}"/>
 						<tr>
-							<td><a href="${scaffold.getName()}">${scaffold.getName()}</a></td>
-							<td>
+							<td class="pane"><a href="${scaffold.getName()}">${scaffold.getName()}</a></td>
+							<td class="pane">
 								<ul>
 									<j:forEach var="jobName" items="${scaffold.jobNames}">
 										<li><a href="${rootUrl}/job/${jobName}">${jobName}</a></li>
 									</j:forEach>
 								</ul>
 							</td>
-							<td>
+							<td class="pane">
 								<j:forEach var="variable" items="${scaffold.variables}">
 									<li>${variable}</li>
 								</j:forEach>
 							</td>
-							<td>
+							<td class="pane">
 								<a href="standUp?name=${scaffold.name}" class="standupButton">
 									<img src="${rootUrl}/images/24x24/gear.gif"/>
 								</a>
