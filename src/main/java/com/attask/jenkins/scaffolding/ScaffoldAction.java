@@ -124,9 +124,15 @@ public class ScaffoldAction implements RootAction {
         for (String jobName : jobNames) {
             AbstractProject job = Project.findNearest(jobName);
             if (job instanceof TopLevelItem) {
-                Class<? extends TopLevelItem> jobClass = ((TopLevelItem)job).getClass();
+                Class<? extends TopLevelItem> jobClass = ((TopLevelItem) job).getClass();
                 String newName = job.getName() + jobNameAppend;
-                TopLevelItem newJob = Jenkins.getInstance().createProject(jobClass, newName);
+                TopLevelItem newJob = null;
+                try {
+                    newJob = Jenkins.getInstance().createProject(jobClass, newName);
+                } catch (IllegalArgumentException e) {
+                    response.forwardToPreviousPage(request);
+                    return;
+                }
 
                 if (newJob instanceof BuildableItemWithBuildWrappers) {
                     DescribableList<BuildWrapper, Descriptor<BuildWrapper>> buildWrappersList = ((BuildableItemWithBuildWrappers) newJob).getBuildWrappersList();
