@@ -79,6 +79,8 @@ public class ScaffoldAction implements RootAction {
 		Scaffold scaffold = new Scaffold(name, Arrays.asList(jobNames), Arrays.asList(variableNames));
 		scaffolding.put(scaffold.getName(), scaffold);
 
+		scaffold.save();
+
 		response.forwardToPreviousPage(request);
 	}
 

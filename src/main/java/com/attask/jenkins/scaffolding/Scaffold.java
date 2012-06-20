@@ -3,9 +3,11 @@ package com.attask.jenkins.scaffolding;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import hudson.model.Saveable;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,7 +18,7 @@ import java.util.List;
  * Time: 9:45 AM
  */
 @ExportedBean
-public class Scaffold extends AbstractDescribableImpl<Scaffold> {
+public class Scaffold extends AbstractDescribableImpl<Scaffold> implements Saveable {
 	private String name;
 	private List<String> jobNames;
 	private List<String> variables;
@@ -49,6 +51,10 @@ public class Scaffold extends AbstractDescribableImpl<Scaffold> {
 				", jobNames=" + jobNames +
 				", variables=" + variables +
 				'}';
+	}
+
+	public void save() throws IOException {
+		//todo
 	}
 
 	@Extension
