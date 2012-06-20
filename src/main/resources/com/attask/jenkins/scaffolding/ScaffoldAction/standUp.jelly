@@ -4,7 +4,7 @@
 		<l:main-panel>
 			<div id="Templating-Scaffolding">
 				<j:set var="scaffold" value="${it.allScaffolding.get(request.getParameter('name'))}"/>
-				<h1>Scaffold ${scaffold.name}</h1>
+				<h1>Stand Up ${scaffold.name}</h1>
 				${scaffold}
 				<!--TODO pretty up the page-->
 				<!--TODO delete button-->

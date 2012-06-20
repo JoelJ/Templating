@@ -95,6 +95,10 @@ public class ScaffoldAction implements RootAction {
 		response.forwardToPreviousPage(request);
 	}
 
+	public void doStandUpScaffold(StaplerRequest request, StaplerResponse response) throws IOException, ServletException {
+		//TODO create all the jobs based on the request parameters
+	}
+
 	public String getIconFileName() {
 		return "/plugin/Templating/blueprint.png";
 	}
