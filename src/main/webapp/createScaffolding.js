@@ -32,8 +32,11 @@ function onJobNameCheckboxClick(event) {
 
 			for(var i = 0; i < response.result.length; i++) {
 				var variableName = response.result[i];
-				innerHTML += '<li>'+variableName+'</li>';
+				innerHTML += '<li>'
+				innerHTML += variableName
 				innerHTML += '<input type="hidden" name="variables" value="'+variableName+'" />';
+				innerHTML += '</li>';
+
 			}
 
 			ul.innerHTML = innerHTML;
