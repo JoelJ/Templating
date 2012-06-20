@@ -2,7 +2,6 @@ package com.attask.jenkins.scaffolding;
 
 import hudson.Extension;
 import hudson.model.AbstractProject;
-import hudson.model.Executor;
 import hudson.model.Project;
 import hudson.model.RootAction;
 import jenkins.model.Jenkins;
@@ -40,8 +39,11 @@ public class ScaffoldAction implements RootAction {
 			response.setStatus(405);
 			result.put("error", "GET expected, but was " + request.getMethod());
 		} else {
-			String jobName = request.getParameter("name");
-			List<String> variables = getVariablesForJob(jobName);
+			String[] jobNames = request.getParameterValues("names");
+			Set<String> variables = new TreeSet<String>();
+			if(jobNames != null) {
+				 variables.addAll(getVariablesForJob(jobNames));
+			}
 			result.put("result", variables);
 		}
 
@@ -51,30 +53,35 @@ public class ScaffoldAction implements RootAction {
 		outputStream.flush();
 	}
 
-	private List<String> getVariablesForJob(String jobName) throws IOException {
-		AbstractProject nearest = Project.findNearest(jobName);
-		String configFile = nearest.getConfigFile().asString();
+	private Set<String> getVariablesForJob(String... jobNames) throws IOException {
+		Set<String> variables = new TreeSet<String>();
+		for (String jobName : jobNames) {
+			AbstractProject nearest = Project.findNearest(jobName);
+			String configFile = nearest.getConfigFile().asString();
 
-		Pattern pattern = Pattern.compile("\\$\\$([\\w\\d_]+)\\b");
-		Matcher matcher = pattern.matcher(configFile);
-		List<String> variables = new ArrayList<String>();
-		while(matcher.find()) {
-			String variableName = matcher.group(1); //Group one doesn't include the $$ or the \\b
-			variables.add(variableName);
+			Pattern pattern = Pattern.compile("\\$\\$([\\w\\d_]+)\\b");
+			Matcher matcher = pattern.matcher(configFile);
+
+			while(matcher.find()) {
+				String variableName = matcher.group(1); //Group one doesn't include the $$ or the \\b
+				variables.add(variableName);
+			}
 		}
 		return variables;
 	}
 
 	public void doCreateScaffold(StaplerRequest request, StaplerResponse response) throws IOException, ServletException {
 		String name = request.getParameter("name");
-		String[] jobNames = request.getParameterValues("jobs");
+		String[] jobNames = request.getParameterValues("jobNames");
 		String[] variableNames = request.getParameterValues("variables");
-
-		Scaffold scaffold = new Scaffold(name, Arrays.asList(jobNames), Arrays.asList(variableNames));
-        scaffoldCache.put(scaffold);
-
-		scaffold.save();
-
+		if(name != null && jobNames != null) {
+			if(variableNames == null) {
+				variableNames = new String[]{};
+			}
+			Scaffold scaffold = new Scaffold(name, Arrays.asList(jobNames), Arrays.asList(variableNames));
+			scaffoldCache.put(scaffold);
+			scaffold.save();
+		}
 		response.forwardToPreviousPage(request);
 	}
 

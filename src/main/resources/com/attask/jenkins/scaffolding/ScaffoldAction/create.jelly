@@ -1,17 +1,27 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
-	<l:layout norefresh="true" title="${%New View}">
+	<l:layout norefresh="true" title="New Scaffolding">
 		<st:include it="${app}" page="sidepanel.jelly" />
 		<l:main-panel>
+			<script type="text/javascript" src="${rootURL}/plugin/Templating/createScaffolding.js"><!--empty--></script>
 			<div id="Templating-Scaffolding">
 				<h1>Create New Scaffolding</h1>
-				<form method="post" action="../createScaffold">
-					<input name="name"/>
+				<form method="post" action="createScaffold">
+					<div>
+						<span>Name</span>
+						<input name="name"/>
+					</div>
 					<div id="jobNames">
-						<input name="jobNames"/>
-						<button id="addJob">Add Job</button>
+						<h2>Jobs</h2>
+						<j:forEach var="jobName" items="${app.getTopLevelItemNames()}">
+							<input type="checkbox" name="jobNames" value="${jobName}"/>
+							<span>${jobName}</span>
+						</j:forEach>
 					</div>
 					<div id="variableNames">
+						<h2>Variables</h2>
+						<ul><!--auto-populates--></ul>
 					</div>
+					<input type="submit" value="Save" />
 				</form>
 			</div>
 		</l:main-panel>
