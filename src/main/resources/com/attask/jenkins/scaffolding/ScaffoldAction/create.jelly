@@ -13,8 +13,10 @@
 					<div id="jobNames">
 						<h2>Jobs</h2>
 						<j:forEach var="jobName" items="${app.getTopLevelItemNames()}">
-							<input type="checkbox" name="jobNames" value="${jobName}"/>
-							<span>${jobName}</span>
+							<div>
+								<input type="checkbox" name="jobNames" value="${jobName}"/>
+								<span>${jobName}</span>
+							</div>
 						</j:forEach>
 					</div>
 					<div id="variableNames">
