@@ -16,6 +16,7 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -74,8 +75,12 @@ public class ImplementationBuildWrapper extends BuildWrapper {
 		}
 
 		Map<Pattern, String> propertiesMap = getPropertiesMap(template, implementation, implementationBuildWrapper);
+
+		String oldDescription = implementation.getDescription();
+		boolean oldDisabled = implementation.isDisabled();
+
 		XmlFile implementationXmlFile = replaceConfig(template, implementation, propertiesMap);
-		refreshAndSave(template, implementation, implementationBuildWrapper, implementationXmlFile);
+		refreshAndSave(template, implementation, implementationBuildWrapper, implementationXmlFile, oldDescription, oldDisabled);
 	}
 
 	private static ImplementationBuildWrapper getBuildWrapperFromImplementation(AbstractProject implementation) {
@@ -123,10 +128,13 @@ public class ImplementationBuildWrapper extends BuildWrapper {
 		return implementationXmlFile;
 	}
 
-	private static void refreshAndSave(AbstractProject template, final AbstractProject implementation, ImplementationBuildWrapper implementationBuildWrapper, XmlFile implementationXmlFile) throws IOException {
+	private static void refreshAndSave(AbstractProject template, final AbstractProject implementation, ImplementationBuildWrapper implementationBuildWrapper, XmlFile implementationXmlFile, String oldDescription, boolean oldDisabled) throws IOException {
 		implementationBuildWrapper.synced = true;
 		((Describable)implementation).getDescriptor().load();
 		AbstractProject newImplementation = (AbstractProject)implementationXmlFile.unmarshal(implementation);
+
+		newImplementation.setDescription(oldDescription);
+		setDisabledValue(newImplementation, oldDisabled);
 
 		DescribableList<BuildWrapper, Descriptor<BuildWrapper>> implementationBuildWrappers = ((BuildableItemWithBuildWrappers) newImplementation).getBuildWrappersList();
 		implementationBuildWrappers.add(implementationBuildWrapper);
@@ -144,6 +152,30 @@ public class ImplementationBuildWrapper extends BuildWrapper {
 		}
 
 		newImplementation.getConfigFile().write(newImplementation); //don't call save() because it calls the event handlers.
+	}
+
+	/**
+	 * We need to hack around project and set the "disabled" field directly via reflection.<br/>
+	 * We can't use the AbstractProject#enable or AbstractProject#disable methods
+	 * 	because they call the AbstractProject#save method.<br/>
+	 * Since the "disabled" field is protected, it shouldn't ever change to keep backwards compatibility.
+	 */
+	private static void setDisabledValue(AbstractProject project, boolean disabled) {
+		Class<?> projectClass = project.getClass();
+		while(!Object.class.equals(projectClass)) {
+			try {
+				Field disabledField = projectClass.getDeclaredField("disabled");
+				disabledField.setAccessible(true);
+				disabledField.set(project, disabled);
+				return;
+			} catch (NoSuchFieldException ignore) {
+				//doesn't have the declared field, go on to the next one
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e); //shouldn't happen
+			}
+
+			projectClass = projectClass.getSuperclass();
+		}
 	}
 
 	private static boolean verifySaved(AbstractProject oldImplementation, AbstractProject newImplementation) {
