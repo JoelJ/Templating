@@ -124,31 +124,26 @@ public class ImplementationBuildWrapper extends BuildWrapper {
 	}
 
 	private static void refreshAndSave(AbstractProject template, final AbstractProject implementation, ImplementationBuildWrapper implementationBuildWrapper, XmlFile implementationXmlFile) throws IOException {
-		int attempt = 0;
-		AbstractProject newImplementation = null;
-//		while(attempt == 0 || (verifySaved(implementation, newImplementation) && attempt < 5)) {
-			implementationBuildWrapper.synced = true;
-			((Describable)implementation).getDescriptor().load();
-			newImplementation = (AbstractProject)implementationXmlFile.unmarshal(implementation);
+		implementationBuildWrapper.synced = true;
+		((Describable)implementation).getDescriptor().load();
+		AbstractProject newImplementation = (AbstractProject)implementationXmlFile.unmarshal(implementation);
 
-			DescribableList<BuildWrapper, Descriptor<BuildWrapper>> implementationBuildWrappers = ((BuildableItemWithBuildWrappers) newImplementation).getBuildWrappersList();
-			implementationBuildWrappers.add(implementationBuildWrapper);
+		DescribableList<BuildWrapper, Descriptor<BuildWrapper>> implementationBuildWrappers = ((BuildableItemWithBuildWrappers) newImplementation).getBuildWrappersList();
+		implementationBuildWrappers.add(implementationBuildWrapper);
 
-			List<BuildWrapper> toRemove = new LinkedList<BuildWrapper>();
-			for (BuildWrapper buildWrapper : implementationBuildWrappers) {
-				if(buildWrapper instanceof TemplateBuildWrapper) {
-					if(template.getName().equals(((TemplateBuildWrapper) buildWrapper).getTemplateName())) {
-						toRemove.add(buildWrapper);
-					}
+		List<BuildWrapper> toRemove = new LinkedList<BuildWrapper>();
+		for (BuildWrapper buildWrapper : implementationBuildWrappers) {
+			if(buildWrapper instanceof TemplateBuildWrapper) {
+				if(template.getName().equals(((TemplateBuildWrapper) buildWrapper).getTemplateName())) {
+					toRemove.add(buildWrapper);
 				}
 			}
-			for (BuildWrapper buildWrapper : toRemove) {
-				implementationBuildWrappers.remove(buildWrapper);
-			}
+		}
+		for (BuildWrapper buildWrapper : toRemove) {
+			implementationBuildWrappers.remove(buildWrapper);
+		}
 
-			newImplementation.getConfigFile().write(newImplementation); //do call save() because it calls the event handlers.
-			attempt++;
-//		}
+		newImplementation.getConfigFile().write(newImplementation); //don't call save() because it calls the event handlers.
 	}
 
 	private static boolean verifySaved(AbstractProject oldImplementation, AbstractProject newImplementation) {
