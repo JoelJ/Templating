@@ -1,5 +1,6 @@
 package com.attask.jenkins.templates;
 
+import com.attask.jenkins.ReflectionUtils;
 import com.attask.jenkins.UnixUtils;
 import com.google.common.collect.ImmutableMap;
 import hudson.Extension;
@@ -8,15 +9,16 @@ import hudson.XmlFile;
 import hudson.model.*;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import hudson.util.CopyOnWriteList;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -57,7 +59,7 @@ public class ImplementationBuildWrapper extends BuildWrapper {
 		}
 	}
 
-	static void syncFromTemplate(AbstractProject template, AbstractProject implementation) throws IOException {
+	void syncFromTemplate(AbstractProject template, AbstractProject implementation) throws IOException {
 		if(
 				implementation == null ||
 				!(implementation instanceof BuildableItemWithBuildWrappers) ||
@@ -69,21 +71,17 @@ public class ImplementationBuildWrapper extends BuildWrapper {
 			return;
 		}
 
-		ImplementationBuildWrapper implementationBuildWrapper = getBuildWrapperFromImplementation(implementation);
-		if(implementationBuildWrapper == null) {
-			return;
-		}
-
+		ImplementationBuildWrapper implementationBuildWrapper = this;
 		Map<Pattern, String> propertiesMap = getPropertiesMap(template, implementation, implementationBuildWrapper);
 
 		String oldDescription = implementation.getDescription();
 		boolean oldDisabled = implementation.isDisabled();
 
 		XmlFile implementationXmlFile = replaceConfig(template, implementation, propertiesMap);
-		refreshAndSave(template, implementation, implementationBuildWrapper, implementationXmlFile, oldDescription, oldDisabled);
+		refreshAndSave(template, implementationBuildWrapper, implementationXmlFile, oldDescription, oldDisabled);
 	}
 
-	private static ImplementationBuildWrapper getBuildWrapperFromImplementation(AbstractProject implementation) {
+	public static ImplementationBuildWrapper getBuildWrapperFromImplementation(AbstractProject implementation) {
 		ImplementationBuildWrapper implementationBuildWrapper = null;
 		DescribableList<BuildWrapper,Descriptor<BuildWrapper>> buildWrappersList = ((BuildableItemWithBuildWrappers) implementation).getBuildWrappersList();
 		for (BuildWrapper wrapper : buildWrappersList) {
@@ -128,61 +126,53 @@ public class ImplementationBuildWrapper extends BuildWrapper {
 		return implementationXmlFile;
 	}
 
-	private static void refreshAndSave(AbstractProject template, final AbstractProject implementation, ImplementationBuildWrapper implementationBuildWrapper, XmlFile implementationXmlFile, String oldDescription, boolean oldDisabled) throws IOException {
+	private static void refreshAndSave(AbstractProject template, ImplementationBuildWrapper implementationBuildWrapper, XmlFile implementationXmlFile, String oldDescription, boolean oldDisabled) throws IOException {
 		implementationBuildWrapper.synced = true;
-		((Describable)implementation).getDescriptor().load();
-		AbstractProject newImplementation = (AbstractProject)implementationXmlFile.unmarshal(implementation);
 
-		newImplementation.setDescription(oldDescription);
-		setDisabledValue(newImplementation, oldDisabled);
+		TopLevelItem item = (TopLevelItem) Items.load(Jenkins.getInstance(), implementationXmlFile.getFile().getParentFile());
+		if(item instanceof AbstractProject) {
+			AbstractProject newImplementation = (AbstractProject) item;
 
-		DescribableList<BuildWrapper, Descriptor<BuildWrapper>> implementationBuildWrappers = ((BuildableItemWithBuildWrappers) newImplementation).getBuildWrappersList();
-		implementationBuildWrappers.add(implementationBuildWrapper);
+			//Use reflection to prevent it from auto-saving
+			ReflectionUtils.setField(newImplementation, "description", oldDescription);
+			ReflectionUtils.setField(newImplementation, "disabled", oldDisabled);
 
-		List<BuildWrapper> toRemove = new LinkedList<BuildWrapper>();
-		for (BuildWrapper buildWrapper : implementationBuildWrappers) {
-			if(buildWrapper instanceof TemplateBuildWrapper) {
-				if(template.getName().equals(((TemplateBuildWrapper) buildWrapper).getTemplateName())) {
+			DescribableList<BuildWrapper, Descriptor<BuildWrapper>> implementationBuildWrappers = ((BuildableItemWithBuildWrappers) newImplementation).getBuildWrappersList();
+			CopyOnWriteList data = ReflectionUtils.getField(CopyOnWriteList.class, implementationBuildWrappers, "data");
+
+			//strip out any template definitions or implementation definitions copied from the template
+			List<BuildWrapper> toRemove = new LinkedList<BuildWrapper>();
+			for (BuildWrapper buildWrapper : implementationBuildWrappers) {
+				if(buildWrapper instanceof TemplateBuildWrapper) {
+					if(template.getName().equals(((TemplateBuildWrapper) buildWrapper).getTemplateName())) {
+						toRemove.add(buildWrapper);
+					}
+				} else if(buildWrapper instanceof ImplementationBuildWrapper) {
 					toRemove.add(buildWrapper);
 				}
 			}
-		}
-		for (BuildWrapper buildWrapper : toRemove) {
-			implementationBuildWrappers.remove(buildWrapper);
-		}
+			for (BuildWrapper buildWrapper : toRemove) {
+				data.remove(buildWrapper);
+			}
 
-		newImplementation.getConfigFile().write(newImplementation); //don't call save() because it calls the event handlers.
+			//make sure the implementation definition is still in there
+			data.add(implementationBuildWrapper);
+
+			newImplementation.getConfigFile().write(newImplementation); //don't call save() because it calls the event handlers.
+			item = (TopLevelItem) Items.load(Jenkins.getInstance(), implementationXmlFile.getFile().getParentFile());
+
+			putItemInJenkins(Jenkins.getInstance(), item);
+		}
 	}
 
 	/**
-	 * We need to hack around project and set the "disabled" field directly via reflection.<br/>
-	 * We can't use the AbstractProject#enable or AbstractProject#disable methods
-	 * 	because they call the AbstractProject#save method.<br/>
-	 * Since the "disabled" field is protected, it shouldn't ever change to keep backwards compatibility.
+	 * Updates Jenkin's cache with the given TopLevelItem
+	 * @param jenkins
+	 * @param item
 	 */
-	private static void setDisabledValue(AbstractProject project, boolean disabled) {
-		Class<?> projectClass = project.getClass();
-		while(!Object.class.equals(projectClass)) {
-			try {
-				Field disabledField = projectClass.getDeclaredField("disabled");
-				disabledField.setAccessible(true);
-				disabledField.set(project, disabled);
-				return;
-			} catch (NoSuchFieldException ignore) {
-				//doesn't have the declared field, go on to the next one
-			} catch (IllegalAccessException e) {
-				throw new RuntimeException(e); //shouldn't happen
-			}
-
-			projectClass = projectClass.getSuperclass();
-		}
-	}
-
-	private static boolean verifySaved(AbstractProject oldImplementation, AbstractProject newImplementation) {
-		if(newImplementation == null) {
-			return false;
-		}
-		return oldImplementation.equals(newImplementation);
+	private static void putItemInJenkins(Jenkins jenkins, TopLevelItem item) {
+		Map map = ReflectionUtils.getField(Map.class, jenkins, "items");
+		map.put(item.getName(), item);
 	}
 
 	public static Map<String, String> expandToMap(String parameters) {

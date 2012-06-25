@@ -39,7 +39,8 @@ public class TemplateBuildWrapper extends BuildWrapper {
 		if(templateProject != null) {
 			Set<AbstractProject> implementingProjects = getImplementers();
 			for (AbstractProject implementingProject : implementingProjects) {
-				ImplementationBuildWrapper.syncFromTemplate(templateProject, implementingProject);
+				ImplementationBuildWrapper implementationBuildWrapper = ImplementationBuildWrapper.getBuildWrapperFromImplementation(implementingProject);
+				implementationBuildWrapper.syncFromTemplate(templateProject, implementingProject);
 			}
 		}
 	}
