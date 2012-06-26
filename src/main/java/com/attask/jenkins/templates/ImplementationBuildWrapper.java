@@ -72,6 +72,11 @@ public class ImplementationBuildWrapper extends BuildWrapper {
 		}
 
 		ImplementationBuildWrapper implementationBuildWrapper = this;
+		TemplateBuildWrapper templateBuildWrapper = BuildWrapperUtils.findBuildWrapper(TemplateBuildWrapper.class, template);
+		if(templateBuildWrapper == null) {
+			return;
+		}
+
 		Map<Pattern, String> propertiesMap = getPropertiesMap(template, implementation, implementationBuildWrapper);
 
 		String oldDescription = implementation.getDescription();
