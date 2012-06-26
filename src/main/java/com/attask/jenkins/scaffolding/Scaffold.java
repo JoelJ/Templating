@@ -111,9 +111,11 @@ public class Scaffold extends AbstractDescribableImpl<Scaffold> implements Savea
                 return file.isDirectory();
             }
         });
-        for (File directory : directories) {
-            result.add(directory.getName());
-        }
+		if(directories != null) {
+			for (File directory : directories) {
+				result.add(directory.getName());
+			}
+		}
         return result;
     }
 
