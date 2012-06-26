@@ -120,11 +120,11 @@ public class ScaffoldAction implements RootAction {
         }
         List<String> jobNames = scaffold.getJobNames();
         for (String jobName : jobNames) {
-            AbstractProject job = Project.findNearest(jobName);
-            if (job instanceof TopLevelItem) {
-                Class<? extends TopLevelItem> jobClass = ((TopLevelItem) job).getClass();
-                String newName = job.getName() + jobNameAppend;
-                TopLevelItem newJob = null;
+            AbstractProject jobToClone = Project.findNearest(jobName);
+            if (jobToClone instanceof TopLevelItem) {
+                Class<? extends TopLevelItem> jobClass = ((TopLevelItem) jobToClone).getClass();
+                String newName = jobToClone.getName() + jobNameAppend;
+                TopLevelItem newJob;
                 try {
                     newJob = Jenkins.getInstance().createProject(jobClass, newName);
                 } catch (IllegalArgumentException e) {
@@ -133,16 +133,19 @@ public class ScaffoldAction implements RootAction {
                 }
 
                 if (newJob instanceof BuildableItemWithBuildWrappers) {
-					BuildableItemWithBuildWrappers buildable = (BuildableItemWithBuildWrappers) newJob;
-					DescribableList<BuildWrapper, Descriptor<BuildWrapper>> buildWrappersList = buildable.getBuildWrappersList();
-					TemplateBuildWrapper toRemove = BuildWrapperUtils.findBuildWrapper(TemplateBuildWrapper.class, buildable);
-					buildWrappersList.remove(toRemove);
+					// If the target job (jobToClone) is actually a template, let's implement it rather than just clone it.
+					TemplateBuildWrapper templateBuildWrapper = BuildWrapperUtils.findBuildWrapper(TemplateBuildWrapper.class, jobToClone);
+					if(templateBuildWrapper != null) {
+						BuildableItemWithBuildWrappers buildable = (BuildableItemWithBuildWrappers) newJob;
+						DescribableList<BuildWrapper, Descriptor<BuildWrapper>> buildWrappersList = buildable.getBuildWrappersList();
+						TemplateBuildWrapper toRemove = BuildWrapperUtils.findBuildWrapper(TemplateBuildWrapper.class, buildable);
+						buildWrappersList.remove(toRemove);
 
-                    String variablesAsPropertiesFile = squashVariables(variableValues);
-                    ImplementationBuildWrapper implementationBuildWrapper = new ImplementationBuildWrapper(job.getName(), newJob.getName(), variablesAsPropertiesFile);
-                    buildWrappersList.add(implementationBuildWrapper);
-                    newJob.save();
-
+						String variablesAsPropertiesFile = squashVariables(variableValues);
+						ImplementationBuildWrapper implementationBuildWrapper = new ImplementationBuildWrapper(jobToClone.getName(), newJob.getName(), variablesAsPropertiesFile);
+						buildWrappersList.add(implementationBuildWrapper);
+						newJob.save();
+					}
                 }
             }
         }
