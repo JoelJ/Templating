@@ -1,5 +1,6 @@
 package com.attask.jenkins.templates;
 
+import com.attask.jenkins.BuildWrapperUtils;
 import com.attask.jenkins.ReflectionUtils;
 import com.attask.jenkins.UnixUtils;
 import com.google.common.collect.ImmutableMap;
@@ -84,17 +85,6 @@ public class ImplementationBuildWrapper extends BuildWrapper {
 
 		XmlFile implementationXmlFile = replaceConfig(template, implementation, propertiesMap);
 		refreshAndSave(template, implementationBuildWrapper, implementationXmlFile, oldDescription, oldDisabled);
-	}
-
-	public static ImplementationBuildWrapper getBuildWrapperFromImplementation(AbstractProject implementation) {
-		ImplementationBuildWrapper implementationBuildWrapper = null;
-		DescribableList<BuildWrapper,Descriptor<BuildWrapper>> buildWrappersList = ((BuildableItemWithBuildWrappers) implementation).getBuildWrappersList();
-		for (BuildWrapper wrapper : buildWrappersList) {
-			if(wrapper instanceof ImplementationBuildWrapper) {
-				implementationBuildWrapper = (ImplementationBuildWrapper)wrapper;
-			}
-		}
-		return implementationBuildWrapper;
 	}
 
 	private static Map<Pattern, String> getPropertiesMap(AbstractProject template, AbstractProject implementation, ImplementationBuildWrapper implementationBuildWrapper) {

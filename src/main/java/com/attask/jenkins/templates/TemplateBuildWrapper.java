@@ -1,5 +1,6 @@
 package com.attask.jenkins.templates;
 
+import com.attask.jenkins.BuildWrapperUtils;
 import com.google.common.collect.ImmutableSet;
 import hudson.Extension;
 import hudson.Launcher;
@@ -39,7 +40,7 @@ public class TemplateBuildWrapper extends BuildWrapper {
 		if(templateProject != null) {
 			Set<AbstractProject> implementingProjects = getImplementers();
 			for (AbstractProject implementingProject : implementingProjects) {
-				ImplementationBuildWrapper implementationBuildWrapper = ImplementationBuildWrapper.getBuildWrapperFromImplementation(implementingProject);
+				ImplementationBuildWrapper implementationBuildWrapper = BuildWrapperUtils.findBuildWrapper(ImplementationBuildWrapper.class, implementingProject);
 				implementationBuildWrapper.syncFromTemplate(templateProject, implementingProject);
 			}
 		}

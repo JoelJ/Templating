@@ -1,13 +1,12 @@
 package com.attask.jenkins.scaffolding;
 
+import com.attask.jenkins.BuildWrapperUtils;
 import com.attask.jenkins.templates.ImplementationBuildWrapper;
 import com.attask.jenkins.templates.TemplateBuildWrapper;
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.model.BuildableItemWithBuildWrappers;
 import hudson.model.Descriptor;
-import hudson.model.ItemGroup;
-import hudson.model.Job;
 import hudson.model.Project;
 import hudson.model.RootAction;
 import hudson.model.TopLevelItem;
@@ -22,7 +21,6 @@ import org.kohsuke.stapler.StaplerResponse;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -135,15 +133,10 @@ public class ScaffoldAction implements RootAction {
                 }
 
                 if (newJob instanceof BuildableItemWithBuildWrappers) {
-                    DescribableList<BuildWrapper, Descriptor<BuildWrapper>> buildWrappersList = ((BuildableItemWithBuildWrappers) newJob).getBuildWrappersList();
-                    TemplateBuildWrapper toRemove = null;
-                    for (BuildWrapper buildWrapper : buildWrappersList) {
-                        if (buildWrapper instanceof TemplateBuildWrapper) {
-                            toRemove = (TemplateBuildWrapper) buildWrapper;
-                            break;
-                        }
-                    }
-                    buildWrappersList.remove(toRemove);
+					BuildableItemWithBuildWrappers buildable = (BuildableItemWithBuildWrappers) newJob;
+					DescribableList<BuildWrapper, Descriptor<BuildWrapper>> buildWrappersList = buildable.getBuildWrappersList();
+					TemplateBuildWrapper toRemove = BuildWrapperUtils.findBuildWrapper(TemplateBuildWrapper.class, buildable);
+					buildWrappersList.remove(toRemove);
 
                     String variablesAsPropertiesFile = squashVariables(variableValues);
                     ImplementationBuildWrapper implementationBuildWrapper = new ImplementationBuildWrapper(job.getName(), newJob.getName(), variablesAsPropertiesFile);
