@@ -146,6 +146,7 @@ public class ScaffoldAction implements RootAction {
 							ImplementationBuildWrapper implementationBuildWrapper = new ImplementationBuildWrapper(jobToClone.getName(), newJob.getName(), variablesAsPropertiesFile);
 							buildWrappersList.add(implementationBuildWrapper);
 							newJob.save();
+							implementationBuildWrapper.sync();
 						}
 					}
 				}
