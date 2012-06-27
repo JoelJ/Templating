@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * Time: 8:30 PM
  */
 @ExportedBean
-public class ImplementationBuildWrapper extends BuildWrapper {
+public class ImplementationBuildWrapper extends BuildWrapper implements Syncable {
 	private final String templateName;
 	private final String implementationName;
 	private final String variables;
@@ -58,6 +58,10 @@ public class ImplementationBuildWrapper extends BuildWrapper {
 		if(template != null && implementation != null) {
 			syncFromTemplate(template, implementation);
 		}
+	}
+
+	public String getProjectName() {
+		return implementationName;
 	}
 
 	void syncFromTemplate(AbstractProject template, AbstractProject implementation) throws IOException {
@@ -203,6 +207,10 @@ public class ImplementationBuildWrapper extends BuildWrapper {
 	@Exported
 	public boolean isSynced() {
 		return synced;
+	}
+
+	public void setSynced(boolean synced) {
+		this.synced = synced;
 	}
 
 	@Override

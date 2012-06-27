@@ -1,0 +1,18 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+		 xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+	<l:layout norefresh="true" title="Scaffolding">
+		<st:include it="${it.project}" page="sidepanel.jelly"/>
+		<l:main-panel>
+
+			<form action="sync" method="POST">
+				<div>
+					<j:if test="${it.getProjectHasRunningJobs()}">
+						<div style="color: red;">Warning! You have builds running. Syncing now can cause weird things to happen!</div>
+					</j:if>
+					<span>Are you sure you want to sync?</span>
+					<input type="submit" value="Sync"/>
+				</div>
+			</form>
+		</l:main-panel>
+	</l:layout>
+</j:jelly>

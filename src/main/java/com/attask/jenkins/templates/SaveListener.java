@@ -24,17 +24,9 @@ public class SaveListener extends SaveableListener {
 			DescribableList<BuildWrapper,Descriptor<BuildWrapper>> buildWrappersList = ((BuildableItemWithBuildWrappers) o).getBuildWrappersList();
 			for (BuildWrapper buildWrapper : buildWrappersList) {
 				if(buildWrapper instanceof TemplateBuildWrapper) {
-					try {
-						((TemplateBuildWrapper) buildWrapper).syncWithImplementers();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
+					((TemplateBuildWrapper) buildWrapper).setSynced(false);
 				} else if(buildWrapper instanceof ImplementationBuildWrapper) {
-					try {
-						((ImplementationBuildWrapper) buildWrapper).sync();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
+					((ImplementationBuildWrapper) buildWrapper).setSynced(false);
 				}
 			}
 		}

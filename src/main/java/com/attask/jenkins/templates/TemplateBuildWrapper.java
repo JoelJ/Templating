@@ -22,15 +22,16 @@ import java.util.Set;
  * Time: 8:30 PM
  */
 @ExportedBean
-public class TemplateBuildWrapper extends BuildWrapper {
+public class TemplateBuildWrapper extends BuildWrapper implements Syncable {
 	private final String templateName;
+	private boolean synced;
 
 	@DataBoundConstructor
 	public TemplateBuildWrapper(String templateName) {
 		this.templateName = templateName;
 	}
 
-	public void syncWithImplementers() throws IOException {
+	public void sync() throws IOException {
 		AbstractProject templateProject = null;
 		try {
 			templateProject = Project.findNearest(templateName);
@@ -42,8 +43,39 @@ public class TemplateBuildWrapper extends BuildWrapper {
 			for (AbstractProject implementingProject : implementingProjects) {
 				ImplementationBuildWrapper implementationBuildWrapper = BuildWrapperUtils.findBuildWrapper(ImplementationBuildWrapper.class, implementingProject);
 				implementationBuildWrapper.syncFromTemplate(templateProject, implementingProject);
+				implementationBuildWrapper.setSynced(true);
 			}
 		}
+		synced = true;
+	}
+
+	public String getProjectName() {
+		return templateName;
+	}
+
+	public boolean isSynced() {
+		for (ImplementationBuildWrapper implementationBuildWrapper : findImplementersBuildWrappers()) {
+			if(implementationBuildWrapper.isSynced()) {
+				return false;
+			}
+		}
+		return synced;
+	}
+
+	public Set<ImplementationBuildWrapper> findImplementersBuildWrappers() {
+		ImmutableSet.Builder<ImplementationBuildWrapper> builder = ImmutableSet.builder();
+		List<AbstractProject> allProjects = Hudson.getInstance().getAllItems(AbstractProject.class);
+		for (AbstractProject project : allProjects) {
+			if(project instanceof BuildableItemWithBuildWrappers) {
+				DescribableList<BuildWrapper,Descriptor<BuildWrapper>> buildWrappersList = ((BuildableItemWithBuildWrappers) project).getBuildWrappersList();
+				for (BuildWrapper buildWrapper : buildWrappersList) {
+					if(buildWrapper instanceof ImplementationBuildWrapper) {
+						builder.add((ImplementationBuildWrapper) buildWrapper);
+					}
+				}
+			}
+		}
+		return builder.build();
 	}
 
 	public Set<AbstractProject> getImplementers() {
@@ -67,6 +99,13 @@ public class TemplateBuildWrapper extends BuildWrapper {
 	@Exported
 	public String getTemplateName() {
 		return templateName;
+	}
+
+	public void setSynced(boolean synced) {
+		this.synced = synced;
+		for (ImplementationBuildWrapper implementationBuildWrapper : findImplementersBuildWrappers()) {
+			implementationBuildWrapper.setSynced(false);
+		}
 	}
 
 	@Override
