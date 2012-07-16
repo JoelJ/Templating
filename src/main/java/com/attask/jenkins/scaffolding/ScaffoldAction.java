@@ -127,6 +127,7 @@ public class ScaffoldAction implements RootAction {
 
             scaffold.addChildJob(jobNameAppend, newName);
         }
+        scaffold.save();
         String rootUrl = Jenkins.getInstance().getRootUrl() == null ? "/" : Jenkins.getInstance().getRootUrl();
         response.sendRedirect(rootUrl + getUrlName());
     }

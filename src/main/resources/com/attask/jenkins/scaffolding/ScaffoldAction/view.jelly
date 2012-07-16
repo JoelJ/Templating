@@ -16,6 +16,18 @@
                     </j:forEach>
                     </ul>
                 </div>
+                <div>
+                    <h2>Child Jobs</h2>
+                    <ul>
+                        <j:forEach var="childJobSuffix" items="${scaffold.childJobs.keySet()}">
+                            <h3>${childJobSuffix}</h3>
+                            <j:set var="childJobs" value="${scaffold.childJobs.get(childJobSuffix)}"/>
+                            <j:forEach items="${childJobs}" var="childJob">
+                                <li>${childJob}</li>
+                            </j:forEach>
+                        </j:forEach>
+                    </ul>
+                </div>
                 <form method="get" action="create">
                     <input type="hidden" name="scaffoldName" value="${scaffold.name}" />
                     <input type="submit" value="Edit this scaffold"/>

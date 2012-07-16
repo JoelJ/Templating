@@ -22,10 +22,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * User: Joel Johnson
@@ -44,6 +46,8 @@ public class Scaffold extends AbstractDescribableImpl<Scaffold> implements Savea
         this.name = name;
         this.jobNames = new ArrayList<String>(jobNames);
         this.variables = new ArrayList<String>(variables);
+        this.childJobs = new TreeMap<String, List<String>>();
+
     }
 
     private Scaffold(String name) {
