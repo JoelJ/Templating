@@ -10,7 +10,6 @@ import hudson.model.Items;
 import hudson.model.Saveable;
 import hudson.model.listeners.SaveableListener;
 import hudson.util.XStream2;
-import net.sf.json.JSON;
 import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
