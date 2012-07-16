@@ -1,27 +1,39 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
 	<l:layout norefresh="true" title="New Scaffolding">
-		<st:include it="${app}" page="sidepanel.jelly" />
-		<l:main-panel>
-			<script type="text/javascript" src="${rootURL}/plugin/Templating/createScaffolding.js"><!--empty--></script>
+        <st:include it="${app}" page="sidepanel.jelly" />
+        <l:main-panel>
+            <j:set var="scaffold" value="${it.findScaffoldByName(request.getParameter('scaffoldName'))}" />
+            <script type="text/javascript" src="${rootURL}/plugin/Templating/createScaffolding.js"><!--empty--></script>
 			<div id="Templating-Scaffolding">
 				<h1>Create New Scaffolding</h1>
 				<form method="post" action="createScaffold">
 					<div>
 						<span>Name</span>
-						<input name="name"/>
+						<input name="name" value="${scaffold.name}"/>
 					</div>
 					<div id="jobNames">
 						<h2>Jobs</h2>
 						<j:forEach var="jobName" items="${app.getTopLevelItemNames()}">
 							<div>
-								<input type="checkbox" name="jobNames" value="${jobName}"/>
+                                <j:choose>
+                                    <j:when test="${scaffold.jobNames.contains(jobName)}">
+                                        <input type="checkbox" checked="true" name="jobNames" value="${jobName}"/>
+                                    </j:when>
+                                    <j:otherwise>
+                                        <input type="checkbox" name="jobNames" value="${jobName}"/>
+                                    </j:otherwise>
+                                </j:choose>
 								<span>${jobName}</span>
 							</div>
 						</j:forEach>
 					</div>
 					<div id="variableNames">
 						<h2>Variables</h2>
-						<ul><!--auto-populates--></ul>
+						<ul>
+                            <j:forEach items="${scaffold.variables}" var="variable">
+                                <li>${variable}</li>
+                            </j:forEach>
+						</ul>
 					</div>
 					<input type="submit" value="Save" />
 				</form>

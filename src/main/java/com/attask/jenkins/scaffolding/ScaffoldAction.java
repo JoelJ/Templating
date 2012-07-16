@@ -111,7 +111,7 @@ public class ScaffoldAction implements RootAction {
         }
         String scaffoldName = request.getParameter("scaffoldName");
         String jobNameAppend = request.getParameter("jobNameAppend");
-        Scaffold scaffold = scaffoldCache.get(scaffoldName);
+        Scaffold scaffold = findScaffoldByName(scaffoldName);
         List<String> variables = scaffold.getVariables();
         Map<String, String> variableValues = new HashMap<String, String>();
         for (String variable : variables) {
@@ -158,6 +158,13 @@ public class ScaffoldAction implements RootAction {
 
         }
         response.forward(this, "index", request);
+    }
+
+    public Scaffold findScaffoldByName(String scaffoldName) {
+        if (scaffoldName == null || scaffoldName.isEmpty()) {
+            return null;
+        }
+        return scaffoldCache.get(scaffoldName);
     }
 
     public String squashVariables(Map<String, String> variables) {
