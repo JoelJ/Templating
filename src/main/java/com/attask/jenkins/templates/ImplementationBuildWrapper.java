@@ -39,6 +39,10 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 	private final String templateName;
 	private final String implementationName;
 	private final String variables;
+    /**
+     * Needed for backward compatibility with systems that used an older version of this plugin
+     */
+    public transient boolean synced;
 
 	@DataBoundConstructor
 	public ImplementationBuildWrapper(String templateName, String implementationName, String variables) {

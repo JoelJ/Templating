@@ -25,6 +25,11 @@ import java.util.Set;
 public class TemplateBuildWrapper extends BuildWrapper implements Syncable {
 	private final String templateName;
 
+    /**
+     * Needed for backward compatibility with systems that used an older version of this plugin
+     */
+    public transient boolean synced;
+
 	@DataBoundConstructor
 	public TemplateBuildWrapper(String templateName) {
 		this.templateName = templateName;
@@ -88,6 +93,8 @@ public class TemplateBuildWrapper extends BuildWrapper implements Syncable {
 	public String getTemplateName() {
 		return templateName;
 	}
+
+
 
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
