@@ -205,7 +205,7 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 	}
 
 	@Exported
-	public boolean isSynced() {
+	public boolean getSynced() {
 		return synced;
 	}
 

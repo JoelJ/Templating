@@ -53,13 +53,16 @@ public class TemplateBuildWrapper extends BuildWrapper implements Syncable {
 		return templateName;
 	}
 
-	public boolean isSynced() {
+	public boolean getSynced() {
+        if(!synced) {
+            return false;
+        }
 		for (ImplementationBuildWrapper implementationBuildWrapper : findImplementersBuildWrappers()) {
-			if(implementationBuildWrapper.isSynced()) {
+			if(!implementationBuildWrapper.getSynced()) {
 				return false;
 			}
 		}
-		return synced;
+		return true;
 	}
 
 	public Set<ImplementationBuildWrapper> findImplementersBuildWrappers() {
