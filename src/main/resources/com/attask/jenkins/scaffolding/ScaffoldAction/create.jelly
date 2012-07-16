@@ -5,7 +5,14 @@
             <j:set var="scaffold" value="${it.findScaffoldByName(request.getParameter('scaffoldName'))}" />
             <script type="text/javascript" src="${rootURL}/plugin/Templating/createScaffolding.js"><!--empty--></script>
 			<div id="Templating-Scaffolding">
-				<h1>Create New Scaffolding</h1>
+                <j:choose>
+                    <j:when test="${scaffold == null}">
+                        <h1>Create New Scaffolding</h1>
+                    </j:when>
+                    <j:otherwise>
+                        <h1>Edit Scaffolding ${scaffold.name}</h1>
+                    </j:otherwise>
+                </j:choose>
 				<form method="post" action="createScaffold">
 					<div>
 						<span>Name</span>
