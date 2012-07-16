@@ -39,14 +39,12 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 	private final String templateName;
 	private final String implementationName;
 	private final String variables;
-	private boolean synced;
 
 	@DataBoundConstructor
 	public ImplementationBuildWrapper(String templateName, String implementationName, String variables) {
 		this.templateName = templateName;
 		this.implementationName = implementationName;
 		this.variables = variables;
-		this.synced = false;
 	}
 
 	public void sync() throws IOException {
@@ -66,10 +64,6 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 	public String getProjectName() {
 		return implementationName;
 	}
-
-    public boolean showSynced() {
-        return getSynced();
-    }
 
 	void syncFromTemplate(AbstractProject template, AbstractProject implementation) throws IOException {
 		if(
@@ -134,8 +128,6 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 	}
 
 	private static void refreshAndSave(AbstractProject template, ImplementationBuildWrapper implementationBuildWrapper, XmlFile implementationXmlFile, String oldDescription, boolean oldDisabled, Map<TriggerDescriptor, Trigger> oldTriggers) throws IOException {
-		implementationBuildWrapper.synced = true;
-
 		TopLevelItem item = (TopLevelItem) Items.load(Jenkins.getInstance(), implementationXmlFile.getFile().getParentFile());
 		if(item instanceof AbstractProject) {
 			AbstractProject newImplementation = (AbstractProject) item;
@@ -217,26 +209,11 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 		return variables;
 	}
 
-	@Exported
-	public boolean getSynced() {
-		return synced;
-	}
-
-	public void setSynced(boolean synced) {
-		this.synced = synced;
-	}
-
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
-		if(!synced) {
-			listener.error("Job not synced!!!!! Open and save the template to sync!");
-		}
 		return new Environment() {
 			@Override
 			public boolean tearDown(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
-				if(!synced) {
-					listener.error("Job not synced!!!!! Open and save the template to sync!");
-				}
 				return true;
 			}
 		};

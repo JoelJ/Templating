@@ -24,7 +24,6 @@ import java.util.Set;
 @ExportedBean
 public class TemplateBuildWrapper extends BuildWrapper implements Syncable {
 	private final String templateName;
-	private boolean synced;
 
 	@DataBoundConstructor
 	public TemplateBuildWrapper(String templateName) {
@@ -43,31 +42,13 @@ public class TemplateBuildWrapper extends BuildWrapper implements Syncable {
 			for (AbstractProject implementingProject : implementingProjects) {
 				ImplementationBuildWrapper implementationBuildWrapper = BuildWrapperUtils.findBuildWrapper(ImplementationBuildWrapper.class, implementingProject);
 				implementationBuildWrapper.syncFromTemplate(templateProject, implementingProject);
-				implementationBuildWrapper.setSynced(true);
 			}
 		}
-		synced = true;
 	}
 
 	public String getProjectName() {
 		return templateName;
 	}
-
-	public boolean getSynced() {
-        return synced;
-	}
-
-    public boolean showSynced() {
-        if(!getSynced()) {
-            return false;
-        }
-        for (ImplementationBuildWrapper implementationBuildWrapper : findImplementersBuildWrappers()) {
-            if(!implementationBuildWrapper.getSynced()) {
-                return false;
-            }
-        }
-        return true;
-    }
 
 	public Set<ImplementationBuildWrapper> findImplementersBuildWrappers() {
 		ImmutableSet.Builder<ImplementationBuildWrapper> builder = ImmutableSet.builder();
@@ -106,15 +87,6 @@ public class TemplateBuildWrapper extends BuildWrapper implements Syncable {
 	@Exported
 	public String getTemplateName() {
 		return templateName;
-	}
-
-	public void setSynced(boolean synced) {
-		this.synced = synced;
-        if(!synced) {
-            for (ImplementationBuildWrapper implementationBuildWrapper : findImplementersBuildWrappers()) {
-                implementationBuildWrapper.setSynced(synced);
-            }
-        }
 	}
 
 	@Override
