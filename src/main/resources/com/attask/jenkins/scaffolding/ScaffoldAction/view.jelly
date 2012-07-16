@@ -4,8 +4,7 @@
 		<l:main-panel>
 			<div id="Templating-Scaffolding">
 				<j:set var="scaffold" value="${it.allScaffolding.get(request.getParameter('name'))}"/>
-				<h1>Scaffold ${scaffold.name}</h1>
-
+                <h1>Scaffold ${scaffold.name}</h1>
                 <div>
                     <ul>
                     <j:forEach var="varName" items="${scaffold.variables}">
@@ -28,6 +27,10 @@
                         </j:forEach>
                     </ul>
                 </div>
+                <form method="get" action="standUp">
+                    <input type="hidden" name="name" value="${scaffold.name}" />
+                    <input type="submit" value="Stand up this scaffold"/>
+                </form>
                 <form method="get" action="create">
                     <input type="hidden" name="scaffoldName" value="${scaffold.name}" />
                     <input type="submit" value="Edit this scaffold"/>
