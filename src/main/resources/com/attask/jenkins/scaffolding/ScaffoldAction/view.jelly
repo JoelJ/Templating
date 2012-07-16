@@ -22,7 +22,7 @@
                             <h3>${childJobSuffix}</h3>
                             <j:set var="childJobs" value="${scaffold.childJobs.get(childJobSuffix)}"/>
                             <j:forEach items="${childJobs}" var="childJob">
-                                <li>${childJob}</li>
+                                <li><a href="${rootURL}/job/${childJob}">${childJob}</a></li>
                             </j:forEach>
                         </j:forEach>
                     </ul>
