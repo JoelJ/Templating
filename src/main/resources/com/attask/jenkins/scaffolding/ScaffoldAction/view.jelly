@@ -13,16 +13,18 @@
                         <li>
                             ${varName}
                         </li>
-
                     </j:forEach>
                     </ul>
                 </div>
+                <form method="get" action="create">
+                    <input type="hidden" name="scaffoldName" value="${scaffold.name}" />
+                    <input type="submit" value="Edit this scaffold"/>
+                </form>
                 <form method="post" action="deleteScaffold">
                     <input type="hidden" name="name" value="${scaffold.name}" />
                     <input type="submit" value="Delete this scaffold"/>
                 </form>
 				<!--TODO pretty up the page-->
-				<!--TODO delete button-->
 			</div>
 		</l:main-panel>
 	</l:layout>
