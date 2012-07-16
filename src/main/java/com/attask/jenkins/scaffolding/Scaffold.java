@@ -7,7 +7,9 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.model.Items;
+import hudson.model.Jobs;
 import hudson.model.Saveable;
+import hudson.model.TopLevelItem;
 import hudson.model.listeners.SaveableListener;
 import hudson.util.XStream2;
 import org.apache.commons.io.FileUtils;
@@ -22,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -34,6 +37,7 @@ public class Scaffold extends AbstractDescribableImpl<Scaffold> implements Savea
     private String name;
     private List<String> jobNames;
     private List<String> variables;
+    private Map<String,List<String>> childJobs;
     private static final XStream XSTREAM = new XStream2();
 
     public Scaffold(String name, Collection<String> jobNames, Collection<String> variables) {
@@ -67,6 +71,11 @@ public class Scaffold extends AbstractDescribableImpl<Scaffold> implements Savea
     @Exported
     public List<String> getVariables() {
         return variables;
+    }
+
+    @Exported
+    public Map<String,List<String>> getChildJobs() {
+        return childJobs;
     }
 
     @Override
@@ -127,6 +136,17 @@ public class Scaffold extends AbstractDescribableImpl<Scaffold> implements Savea
                 throw new RuntimeException("Could not delete " + name, e); //Todo: make better exception
             }
         }
+    }
+
+    public void addChildJob(String suffix, String name) {
+
+        List<String> jobs = childJobs.get(suffix);
+        if (jobs == null) {
+            jobs = new ArrayList<String>();
+        }
+        jobs.add(name);
+
+        childJobs.put(suffix, jobs);
     }
 
     @Extension

@@ -88,12 +88,12 @@ public class ScaffoldAction implements RootAction {
                 variableNames = new String[]{};
             }
             Scaffold scaffold = new Scaffold(name, Arrays.asList(jobNames), Arrays.asList(variableNames));
+
             scaffoldCache.put(scaffold);
             scaffold.save();
-            response.forward(this, "index", request);
-        } else {
-            response.forwardToPreviousPage(request);
         }
+        String rootUrl = Jenkins.getInstance().getRootUrl() == null ? "/" : Jenkins.getInstance().getRootUrl();
+        response.sendRedirect(rootUrl + getUrlName());
     }
 
     public void doDeleteScaffold(StaplerRequest request, StaplerResponse response) throws IOException, ServletException {
@@ -101,7 +101,8 @@ public class ScaffoldAction implements RootAction {
         scaffoldCache.remove(name);
         Scaffold.delete(name);
 
-        response.forward(this, "index", request);
+        String rootUrl = Jenkins.getInstance().getRootUrl() == null ? "/" : Jenkins.getInstance().getRootUrl();
+        response.sendRedirect(rootUrl + getUrlName());
     }
 
     public void doStandUpScaffold(StaplerRequest request, StaplerResponse response) throws IOException, ServletException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
@@ -122,42 +123,48 @@ public class ScaffoldAction implements RootAction {
         for (String jobName : jobNames) {
             AbstractProject jobToClone = Project.findNearest(jobName);
 			String newName = jobName + jobNameAppend;
-			TemplateBuildWrapper templateBuildWrapper = BuildWrapperUtils.findBuildWrapper(TemplateBuildWrapper.class, jobToClone);
-			if(templateBuildWrapper != null) {
-				if (jobToClone instanceof TopLevelItem) {
-					Class<? extends TopLevelItem> jobClass = ((TopLevelItem) jobToClone).getClass();
-					TopLevelItem newJob;
-					try {
-						newJob = Jenkins.getInstance().createProject(jobClass, newName);
-					} catch (IllegalArgumentException e) {
-						response.forwardToPreviousPage(request);
-						return;
-					}
+            cloneJob(jobToClone, newName, variableValues);
 
-					if (newJob instanceof BuildableItemWithBuildWrappers) {
-						// If the target job (jobToClone) is actually a template, let's implement it rather than just clone it.
-						if(templateBuildWrapper != null) {
-							BuildableItemWithBuildWrappers buildable = (BuildableItemWithBuildWrappers) newJob;
-							DescribableList<BuildWrapper, Descriptor<BuildWrapper>> buildWrappersList = buildable.getBuildWrappersList();
-							TemplateBuildWrapper toRemove = BuildWrapperUtils.findBuildWrapper(TemplateBuildWrapper.class, buildable);
-							buildWrappersList.remove(toRemove);
-
-							String variablesAsPropertiesFile = squashVariables(variableValues);
-							ImplementationBuildWrapper implementationBuildWrapper = new ImplementationBuildWrapper(jobToClone.getName(), newJob.getName(), variablesAsPropertiesFile);
-							buildWrappersList.add(implementationBuildWrapper);
-							newJob.save();
-							implementationBuildWrapper.sync();
-						}
-					}
-				}
-			} else {
-				//clone
-				Jenkins.getInstance().copy(jobToClone, newName);
-			}
-
-
+            scaffold.addChildJob(jobNameAppend, newName);
         }
-        response.forward(this, "index", request);
+        String rootUrl = Jenkins.getInstance().getRootUrl() == null ? "/" : Jenkins.getInstance().getRootUrl();
+        response.sendRedirect(rootUrl + getUrlName());
+    }
+
+    private TopLevelItem cloneJob(AbstractProject jobToClone, String newName, Map<String, String> variableValues) throws IOException, ServletException {
+        TopLevelItem result = null;
+
+        TemplateBuildWrapper templateBuildWrapper = BuildWrapperUtils.findBuildWrapper(TemplateBuildWrapper.class, jobToClone);
+        if(templateBuildWrapper != null) {
+            if (jobToClone instanceof TopLevelItem) {
+                @SuppressWarnings("RedundantCast") //Need to cast to get the generics to work properly
+                Class<? extends TopLevelItem> jobClass = ((TopLevelItem) jobToClone).getClass();
+                TopLevelItem newJob = Jenkins.getInstance().createProject(jobClass, newName);
+
+                if (newJob != null && newJob instanceof BuildableItemWithBuildWrappers) {
+                    // If the target job (jobToClone) is actually a template, let's implement it rather than just clone it.
+
+                    BuildableItemWithBuildWrappers buildable = (BuildableItemWithBuildWrappers) newJob;
+                    DescribableList<BuildWrapper, Descriptor<BuildWrapper>> buildWrappersList = buildable.getBuildWrappersList();
+                    TemplateBuildWrapper toRemove = BuildWrapperUtils.findBuildWrapper(TemplateBuildWrapper.class, buildable);
+                    buildWrappersList.remove(toRemove);
+
+                    String variablesAsPropertiesFile = squashVariables(variableValues);
+                    ImplementationBuildWrapper implementationBuildWrapper = new ImplementationBuildWrapper(jobToClone.getName(), newJob.getName(), variablesAsPropertiesFile);
+                    buildWrappersList.add(implementationBuildWrapper);
+                    newJob.save();
+                    result = newJob;
+                    implementationBuildWrapper.sync();
+
+                }
+            }
+        }
+
+        if (result == null) {
+            //clone
+            result = (TopLevelItem) Jenkins.getInstance().copy(jobToClone, newName);
+        }
+        return result;
     }
 
     public Scaffold findScaffoldByName(String scaffoldName) {
