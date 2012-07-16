@@ -10,6 +10,8 @@ import hudson.XmlFile;
 import hudson.model.*;
 import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import hudson.triggers.Trigger;
+import hudson.triggers.TriggerDescriptor;
 import hudson.util.CopyOnWriteList;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
@@ -24,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
 /**
@@ -64,6 +67,10 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 		return implementationName;
 	}
 
+    public boolean showSynced() {
+        return getSynced();
+    }
+
 	void syncFromTemplate(AbstractProject template, AbstractProject implementation) throws IOException {
 		if(
 				implementation == null ||
@@ -86,9 +93,10 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 
 		String oldDescription = implementation.getDescription();
 		boolean oldDisabled = implementation.isDisabled();
+        Map<TriggerDescriptor, Trigger> oldTriggers = implementation.getTriggers();
 
-		XmlFile implementationXmlFile = replaceConfig(template, implementation, propertiesMap);
-		refreshAndSave(template, implementationBuildWrapper, implementationXmlFile, oldDescription, oldDisabled);
+        XmlFile implementationXmlFile = replaceConfig(template, implementation, propertiesMap);
+		refreshAndSave(template, implementationBuildWrapper, implementationXmlFile, oldDescription, oldDisabled, oldTriggers);
 	}
 
 	private static Map<Pattern, String> getPropertiesMap(AbstractProject template, AbstractProject implementation, ImplementationBuildWrapper implementationBuildWrapper) {
@@ -125,7 +133,7 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 		return implementationXmlFile;
 	}
 
-	private static void refreshAndSave(AbstractProject template, ImplementationBuildWrapper implementationBuildWrapper, XmlFile implementationXmlFile, String oldDescription, boolean oldDisabled) throws IOException {
+	private static void refreshAndSave(AbstractProject template, ImplementationBuildWrapper implementationBuildWrapper, XmlFile implementationXmlFile, String oldDescription, boolean oldDisabled, Map<TriggerDescriptor, Trigger> oldTriggers) throws IOException {
 		implementationBuildWrapper.synced = true;
 
 		TopLevelItem item = (TopLevelItem) Items.load(Jenkins.getInstance(), implementationXmlFile.getFile().getParentFile());
@@ -135,6 +143,11 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 			//Use reflection to prevent it from auto-saving
 			ReflectionUtils.setField(newImplementation, "description", oldDescription);
 			ReflectionUtils.setField(newImplementation, "disabled", oldDisabled);
+            Vector triggers = ReflectionUtils.getField(Vector.class, newImplementation, "triggers");
+            triggers.clear();
+            for (Trigger trigger : oldTriggers.values()) {
+                triggers.add(trigger);
+            }
 
 			DescribableList<BuildWrapper, Descriptor<BuildWrapper>> implementationBuildWrappers = ((BuildableItemWithBuildWrappers) newImplementation).getBuildWrappersList();
 			CopyOnWriteList data = ReflectionUtils.getField(CopyOnWriteList.class, implementationBuildWrappers, "data");

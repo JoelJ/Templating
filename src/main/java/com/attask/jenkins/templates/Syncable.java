@@ -10,5 +10,5 @@ import java.io.IOException;
 public interface Syncable {
 	public void sync() throws IOException;
 	public String getProjectName();
-	public boolean getSynced();
+	public boolean showSynced();
 }

@@ -37,7 +37,7 @@ public class ReflectionUtils {
 	public static <T> T getField(Class<T> type, Object instance, String fieldName) {
 		try {
 			Field field = findField(instance, fieldName);
-			return (T)field.get(instance);
+			return type.cast(field.get(instance));
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException(e); //shouldn't happen
 		} catch (NoSuchFieldException e) {

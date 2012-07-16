@@ -54,16 +54,20 @@ public class TemplateBuildWrapper extends BuildWrapper implements Syncable {
 	}
 
 	public boolean getSynced() {
-        if(!synced) {
+        return synced;
+	}
+
+    public boolean showSynced() {
+        if(!getSynced()) {
             return false;
         }
-		for (ImplementationBuildWrapper implementationBuildWrapper : findImplementersBuildWrappers()) {
-			if(!implementationBuildWrapper.getSynced()) {
-				return false;
-			}
-		}
-		return true;
-	}
+        for (ImplementationBuildWrapper implementationBuildWrapper : findImplementersBuildWrappers()) {
+            if(!implementationBuildWrapper.getSynced()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 	public Set<ImplementationBuildWrapper> findImplementersBuildWrappers() {
 		ImmutableSet.Builder<ImplementationBuildWrapper> builder = ImmutableSet.builder();
@@ -106,9 +110,11 @@ public class TemplateBuildWrapper extends BuildWrapper implements Syncable {
 
 	public void setSynced(boolean synced) {
 		this.synced = synced;
-		for (ImplementationBuildWrapper implementationBuildWrapper : findImplementersBuildWrappers()) {
-			implementationBuildWrapper.setSynced(false);
-		}
+        if(!synced) {
+            for (ImplementationBuildWrapper implementationBuildWrapper : findImplementersBuildWrappers()) {
+                implementationBuildWrapper.setSynced(synced);
+            }
+        }
 	}
 
 	@Override

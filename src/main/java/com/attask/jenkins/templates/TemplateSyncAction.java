@@ -50,7 +50,7 @@ public class TemplateSyncAction implements Action {
 	}
 
 	public String getDisplayName() {
-		if(!syncable.getSynced()) {
+		if(!syncable.showSynced()) {
 			return "Sync";
 		}
 		return null;
