@@ -2,6 +2,12 @@
 	<l:layout norefresh="true" title="Scaffolding">
 		<st:include it="${app}" page="sidepanel.jelly" />
 		<l:main-panel>
+            <style>
+                #Templating-Scaffolding .variable-key {
+                    font-weight: bold;
+                }
+            </style>
+
 			<div id="Templating-Scaffolding">
 				<j:set var="scaffold" value="${it.allScaffolding.get(request.getParameter('name'))}"/>
                 <h1>Scaffold ${scaffold.name}</h1>
@@ -20,9 +26,24 @@
                     <ul>
                         <j:forEach var="childJobSuffix" items="${scaffold.childJobs.keySet()}">
                             <h3>${childJobSuffix}</h3>
+                            <form method="get" action="deleteJobsConfirm">
+                                <input type="hidden" name="scaffoldName" value="${scaffold.name}" />
+                                <input type="hidden" name="suffix" value="${childJobSuffix}" />
+                                <input type="submit" value="Delete"/>
+                            </form>
                             <j:set var="childJobs" value="${scaffold.childJobs.get(childJobSuffix)}"/>
                             <j:forEach items="${childJobs}" var="childJob">
-                                <li><a href="${rootURL}/job/${childJob}">${childJob}</a></li>
+                                <li>
+                                    <a href="${rootURL}/job/${childJob}">${childJob}</a>
+                                    <ul>
+                                        <j:forEach items="${it.getVariablesForImplementation(childJob)}" var="variable">
+                                            <li>
+                                                <span class="variable-key">${variable.key}</span>=<span class="variable-value">${variable.value}</span>
+                                            </li>
+                                        </j:forEach>
+                                    </ul>
+
+                                </li>
                             </j:forEach>
                         </j:forEach>
                     </ul>

@@ -1,6 +1,7 @@
 package com.attask.jenkins.scaffolding;
 
 import com.attask.jenkins.BuildWrapperUtils;
+import com.attask.jenkins.CollectionUtils;
 import com.attask.jenkins.templates.ImplementationBuildWrapper;
 import com.attask.jenkins.templates.TemplateBuildWrapper;
 import hudson.Extension;
@@ -62,6 +63,18 @@ public class ScaffoldAction implements RootAction {
         outputStream.flush();
     }
 
+    public Map<String, String> getVariablesForImplementation(String jobName) {
+        AbstractProject nearest = Project.findNearest(jobName);
+        ImplementationBuildWrapper buildWrapper = BuildWrapperUtils.findBuildWrapper(ImplementationBuildWrapper.class, nearest);
+        if(buildWrapper != null) {
+            String variables = buildWrapper.getVariables();
+            return CollectionUtils.expandToMap(variables);
+        }
+
+        return null;
+    }
+
+
     private Set<String> getVariablesForJob(String... jobNames) throws IOException {
         Set<String> variables = new TreeSet<String>();
         for (String jobName : jobNames) {
@@ -105,6 +118,19 @@ public class ScaffoldAction implements RootAction {
         response.sendRedirect(rootUrl + getUrlName());
     }
 
+    public void doDeleteJobs(StaplerRequest request, StaplerResponse response) throws IOException, ServletException, InterruptedException {
+        String suffix = request.getParameter("suffix");
+        String scaffoldName = request.getParameter("scaffoldName");
+        Scaffold scaffold = scaffoldCache.get(scaffoldName);
+        List<String> jobs = scaffold.getChildJobs().get(suffix);
+        for (String jobName : jobs) {
+            AbstractProject job = Project.findNearest(jobName);
+            job.delete();
+        }
+        String rootUrl = Jenkins.getInstance().getRootUrl() == null ? "/" : Jenkins.getInstance().getRootUrl();
+        response.sendRedirect(rootUrl + getUrlName());
+    }
+
     public void doStandUpScaffold(StaplerRequest request, StaplerResponse response) throws IOException, ServletException, IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
         if (!"post".equalsIgnoreCase(request.getMethod())) {
             response.setStatus(405);
@@ -122,7 +148,7 @@ public class ScaffoldAction implements RootAction {
         List<String> jobNames = scaffold.getJobNames();
         for (String jobName : jobNames) {
             AbstractProject jobToClone = Project.findNearest(jobName);
-			String newName = jobName + jobNameAppend;
+            String newName = jobName + jobNameAppend;
             cloneJob(jobToClone, newName, variableValues);
 
             scaffold.addChildJob(jobNameAppend, newName);
@@ -136,10 +162,10 @@ public class ScaffoldAction implements RootAction {
         TopLevelItem result = null;
 
         TemplateBuildWrapper templateBuildWrapper = BuildWrapperUtils.findBuildWrapper(TemplateBuildWrapper.class, jobToClone);
-        if(templateBuildWrapper != null) {
+        if (templateBuildWrapper != null) {
             if (jobToClone instanceof TopLevelItem) {
                 @SuppressWarnings("RedundantCast") //Need to cast to get the generics to work properly
-                Class<? extends TopLevelItem> jobClass = ((TopLevelItem) jobToClone).getClass();
+                        Class<? extends TopLevelItem> jobClass = ((TopLevelItem) jobToClone).getClass();
                 TopLevelItem newJob = Jenkins.getInstance().createProject(jobClass, newName);
 
                 if (newJob != null && newJob instanceof BuildableItemWithBuildWrappers) {
