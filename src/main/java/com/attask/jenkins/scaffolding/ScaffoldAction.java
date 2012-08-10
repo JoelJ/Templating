@@ -158,7 +158,6 @@ public class ScaffoldAction implements RootAction {
                     Map<String, String> variables = scaffoldImplementation.getVariables();
                     List<String> implJobNames = scaffoldImplementation.getJobNames();
 
-
                     for (String jobName : scaffold.getJobNames()) {
                         if(!oldScaffold.getJobNames().contains(jobName)){
                             AbstractProject jobToClone = Project.findNearest(jobName);
@@ -171,10 +170,13 @@ public class ScaffoldAction implements RootAction {
                             }
 
                         }
-
                     }
-
-
+                    ArrayList<String> jobsToKeep = new ArrayList<String>(implJobNames);
+                    for (String jobToKeep : jobsToKeep) {
+                        if(!scaffold.getJobNames().contains(jobToKeep.split(suffix)[0])){
+                            implJobNames.remove(jobToKeep);
+                        }
+                    }
                     ScaffoldImplementation implementation = new ScaffoldImplementation(suffix, implJobNames, variables);
                     scaffold.getScaffoldImplementations().put(suffix,implementation);
                 }
