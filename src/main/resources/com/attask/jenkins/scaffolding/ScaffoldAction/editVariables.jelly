@@ -1,0 +1,27 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+    <l:layout norefresh="true" title="Scaffolding">
+        <st:include it="${app}" page="sidepanel.jelly"/>
+        <l:main-panel>
+            <div id="Templating-Scaffolding">
+                <j:set var="scaffold" value="${it.allScaffolding.get(request.getParameter('name'))}"/>
+                <j:set var="implementation" value="${scaffold.scaffoldImplementations.get(request.getParameter('suffix'))}" />
+                <h1>Edit variables for ${implementation.name}</h1>
+                ${scaffold.syncVars(request.getParameter("suffix"))}
+                <font color="red">WARNING: This will overwrite previous values of these variables!</font>
+                <form method="post" action="editScaffoldVariables">
+                    <input type="hidden" value="${scaffold.name}" name="scaffoldName" />
+                    <input type="hidden" value="${implementation.name}" name="childJobName" />
+                    <div>
+                        <j:forEach var="varName" items="${implementation.variables.keySet()}">
+                            <div>
+                                <label for="${varName}">${varName}</label>
+                                    <input type="text" name="${varName}" value="${implementation.variables.get(varName)}"/>
+                            </div>
+                        </j:forEach>
+                    </div>
+                    <input type="submit" value="Save"/>
+                </form>
+            </div>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

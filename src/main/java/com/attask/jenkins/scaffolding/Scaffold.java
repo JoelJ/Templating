@@ -1,15 +1,12 @@
 package com.attask.jenkins.scaffolding;
 
+import com.attask.jenkins.BuildWrapperUtils;
+import com.attask.jenkins.CollectionUtils;
+import com.attask.jenkins.templates.ImplementationBuildWrapper;
 import com.thoughtworks.xstream.XStream;
 import hudson.Extension;
 import hudson.XmlFile;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
-import hudson.model.Hudson;
-import hudson.model.Items;
-import hudson.model.Jobs;
-import hudson.model.Saveable;
-import hudson.model.TopLevelItem;
+import hudson.model.*;
 import hudson.model.listeners.SaveableListener;
 import hudson.util.XStream2;
 import org.apache.commons.io.FileUtils;
@@ -19,15 +16,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * User: Joel Johnson
@@ -38,20 +27,62 @@ import java.util.TreeMap;
 public class Scaffold extends AbstractDescribableImpl<Scaffold> implements Saveable {
     private String name;
     private List<String> jobNames;
-    private List<String> variables;
-    private Map<String,List<String>> childJobs;
+    private transient List<String> variables;
+    private transient Map<String,List<String>> childJobs;
+    private Map<String,ScaffoldImplementation> scaffoldImplementations;
     private static final XStream XSTREAM = new XStream2();
 
-    public Scaffold(String name, Collection<String> jobNames, Collection<String> variables) {
+    public Scaffold(String name, Collection<String> jobNames,Collection<String> variables) {
         this.name = name;
-        this.jobNames = new ArrayList<String>(jobNames);
+        this.jobNames=new ArrayList<String>(jobNames);
         this.variables = new ArrayList<String>(variables);
         this.childJobs = new TreeMap<String, List<String>>();
+        this.scaffoldImplementations= new TreeMap<String, ScaffoldImplementation>();
 
     }
 
     private Scaffold(String name) {
-        this(name, Collections.<String>emptyList(), Collections.<String>emptyList());
+        this(name, Collections.<String>emptyList(),Collections.<String>emptyList());
+    }
+
+    public void sync(String childJobName) throws IOException {
+        ScaffoldImplementation scaffoldImplementation = scaffoldImplementations.get(childJobName);
+        List<String> jobs = scaffoldImplementation.getJobNames();
+        for(String job: jobs){
+            AbstractProject project = Project.findNearest(job);
+            try{
+                ImplementationBuildWrapper buildWrapper = BuildWrapperUtils.findBuildWrapper(ImplementationBuildWrapper.class, project);
+
+                buildWrapper.sync();
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void syncVars(String childJobName){
+        ScaffoldImplementation scaffoldImplementation = getScaffoldImplementations().get(childJobName);
+        Map<String, String> variables = scaffoldImplementation.getVariables();
+        List<String> jobNames = scaffoldImplementation.getJobNames();
+        for (String jobName : jobNames) {
+            String templateName = jobName.split(scaffoldImplementation.getName())[0];
+            Set<String> variablesForJob = ScaffoldAction.getVariablesForJob(templateName);
+            for (String variable : variablesForJob) {
+                if(!variables.containsKey(variable)) {
+                    scaffoldImplementation.putVariable(variable,"");
+                }
+            }
+        }
+        for (String jobName : jobNames) {
+            AbstractProject project = AbstractProject.findNearest(jobName);
+            ImplementationBuildWrapper buildWrapper = BuildWrapperUtils.findBuildWrapper(ImplementationBuildWrapper.class, project);
+            buildWrapper.setVariables(ScaffoldAction.squashVariables(variables));
+            try {
+                project.save();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public static Scaffold find(String name) throws IOException {
@@ -74,12 +105,12 @@ public class Scaffold extends AbstractDescribableImpl<Scaffold> implements Savea
 
     @Exported
     public List<String> getVariables() {
-        return variables;
+        return new ArrayList<String>(ScaffoldAction.getVariablesForJob(this.getJobNames()));
     }
 
     @Exported
-    public Map<String,List<String>> getChildJobs() {
-        return childJobs;
+    public Map<String, ScaffoldImplementation> getScaffoldImplementations() {
+        return scaffoldImplementations;
     }
 
     @Override
@@ -142,15 +173,23 @@ public class Scaffold extends AbstractDescribableImpl<Scaffold> implements Savea
         }
     }
 
-    public void addChildJob(String suffix, String name) {
+    public void addChildJob(String suffix, String name, Map<String,String> variables) {
 
-        List<String> jobs = childJobs.get(suffix);
-        if (jobs == null) {
-            jobs = new ArrayList<String>();
+        ScaffoldImplementation imp = scaffoldImplementations.get(suffix);
+        List<String> jobs;
+        if (imp == null) {
+            jobs=new ArrayList<String>();
+        }
+        else{
+            jobs=imp.getJobNames();
+        }
+        if(variables==null){
+            variables=new HashMap<String,String>();
         }
         jobs.add(name);
+        ScaffoldImplementation implementation=new ScaffoldImplementation(suffix,jobs,variables);
 
-        childJobs.put(suffix, jobs);
+        scaffoldImplementations.put(suffix, implementation);
     }
 
     @Extension

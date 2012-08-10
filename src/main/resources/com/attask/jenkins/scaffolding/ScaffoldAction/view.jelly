@@ -23,30 +23,49 @@
                 </div>
                 <div>
                     <h2>Child Jobs</h2>
-                    <ul>
-                        <j:forEach var="childJobSuffix" items="${scaffold.childJobs.keySet()}">
-                            <h3>${childJobSuffix}</h3>
-                            <form method="get" action="deleteJobsConfirm">
-                                <input type="hidden" name="scaffoldName" value="${scaffold.name}" />
-                                <input type="hidden" name="suffix" value="${childJobSuffix}" />
-                                <input type="submit" value="Delete"/>
-                            </form>
-                            <j:set var="childJobs" value="${scaffold.childJobs.get(childJobSuffix)}"/>
-                            <j:forEach items="${childJobs}" var="childJob">
-                                <li>
-                                    <a href="${rootURL}/job/${childJob}">${childJob}</a>
-                                    <ul>
-                                        <j:forEach items="${it.getVariablesForImplementation(childJob)}" var="variable">
-                                            <li>
-                                                <span class="variable-key">${variable.key}</span>=<span class="variable-value">${variable.value}</span>
-                                            </li>
-                                        </j:forEach>
-                                    </ul>
-
-                                </li>
-                            </j:forEach>
+                        <table border="1">
+                            <tr>
+                                <th>ChildJob</th>
+                                <th>Jobs</th>
+                                <th>Actions</th>
+                            </tr>
+                        <j:forEach var="childJobSuffix" items="${scaffold.scaffoldImplementations.keySet()}">
+                            <tr>
+                                <td>${childJobSuffix}</td>
+                                <td>
+                                    ${scaffold.syncVars(childJobSuffix)}
+                                    <j:set var="childJobs" value="${scaffold.scaffoldImplementations.get(childJobSuffix).jobNames}"/>
+                                    <j:forEach items="${childJobs}" var="childJob">
+                                            <a href="${rootURL}/job/${childJob}">${childJob}</a>
+                                                    <ul>
+                                                    <j:forEach items="${it.getVariablesForImplementation(childJob)}" var="variable">
+                                                        <li>
+                                                            <span class="variable-key">${variable.key}</span>=<span class="variable-value">${variable.value}</span>
+                                                        </li>
+                                                    </j:forEach>
+                                                    </ul>
+                                    </j:forEach>
+                                </td>
+                                <td>
+                                    <form method="POST" action="syncScaffold">
+                                        <input type="hidden" name="scaffoldName" value="${scaffold.name}"/>
+                                        <input type="hidden" name="childJobName" value="${childJobSuffix}" />
+                                        <input type="submit" value="Sync Jobs" />
+                                    </form>
+                                    <form method="get" action="editVariables">
+                                        <input type="hidden" name="name" value="${scaffold.name}" />
+                                        <input type="hidden" name="suffix" value="${childJobSuffix}" />
+                                        <input type="submit" value="Edit these Variables" />
+                                    </form>
+                                    <form method="get" action="deleteJobsConfirm">
+                                        <input type="hidden" name="scaffoldName" value="${scaffold.name}" />
+                                        <input type="hidden" name="suffix" value="${childJobSuffix}" />
+                                        <input type="submit" value="Delete"/>
+                                    </form>
+                                </td>
+                            </tr>
                         </j:forEach>
-                    </ul>
+                        </table>
                 </div>
                 <form method="get" action="standUp">
                     <input type="hidden" name="name" value="${scaffold.name}" />
