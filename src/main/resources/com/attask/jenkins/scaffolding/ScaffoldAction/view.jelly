@@ -23,7 +23,7 @@
                 </div>
                 <div>
                     <h2>Child Jobs</h2>
-                        <table border="0">
+                        <table cellpadding="5">
                             <tr>
                                 <th>ChildJob</th>
                                 <th>Jobs</th>

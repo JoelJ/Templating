@@ -53,7 +53,11 @@ public class ScaffoldAction implements RootAction {
             variableValues.put(variable, value);
         }
         ScaffoldImplementation scaffoldImplementation= scaffold.getScaffoldImplementations().get(childJobName);
-        scaffoldImplementation.getVariables().putAll(variableValues);
+        for (String key : variableValues.keySet()) {
+            scaffoldImplementation.putVariable(key,variableValues.get(key));
+        }
+        scaffold.getScaffoldImplementations().put(childJobName,scaffoldImplementation);
+        scaffold.save();
         List<String> jobNames = scaffoldImplementation.getJobNames();
         for (String jobName : jobNames) {
             AbstractProject project = Project.findNearest(jobName);
@@ -156,6 +160,13 @@ public class ScaffoldAction implements RootAction {
                 for (String suffix: suffixes) {
                     ScaffoldImplementation scaffoldImplementation = scaffoldImplementations.get(suffix);
                     Map<String, String> variables = scaffoldImplementation.getVariables();
+                    Map<String,String> implVarCopy=new HashMap<String, String>(variables);
+
+                    for (String key : implVarCopy.keySet()) {
+                        if(!scaffold.getVariables().contains(key)){
+                            variables.remove(key);
+                        }
+                    }
                     List<String> implJobNames = scaffoldImplementation.getJobNames();
 
                     for (String jobName : scaffold.getJobNames()) {
@@ -165,8 +176,16 @@ public class ScaffoldAction implements RootAction {
                             if(!implJobNames.contains(newName)){
                                 implJobNames.add(newName);
                             }
-                            if(Project.findNearest(newName)==null){
+                            List<Project> projects = Jenkins.getInstance().getProjects();
+                            boolean projectIsNotThere=true;
+                            for (Project project : projects) {
+                                if(project.getName().equals(newName)){
+                                    projectIsNotThere=false;
+                                }
+                            }
+                            if(projectIsNotThere){
                                 cloneJob(jobToClone, newName, variables);
+                                jobToClone.save();
                             }
 
                         }
@@ -241,7 +260,7 @@ public class ScaffoldAction implements RootAction {
             AbstractProject jobToClone = Project.findNearest(jobName);
             String newName = jobName + jobNameAppend;
             cloneJob(jobToClone, newName, variableValues);
-
+            jobToClone.save();
             scaffold.addChildJob(jobNameAppend, newName,variableValues);
         }
         scaffold.save();
