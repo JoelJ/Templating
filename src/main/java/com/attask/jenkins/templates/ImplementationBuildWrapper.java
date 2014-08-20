@@ -139,7 +139,8 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 			//Use reflection to prevent it from auto-saving
 			ReflectionUtils.setField(newImplementation, "description", oldDescription);
 			ReflectionUtils.setField(newImplementation, "disabled", oldDisabled);
-            Vector triggers = ReflectionUtils.getField(Vector.class, newImplementation, "triggers");
+            //To resolve the issue #5 cast to List and not to Vector
+            List<Trigger> triggers = ReflectionUtils.getField(List.class, newImplementation, "triggers");
             triggers.clear();
             for (Trigger trigger : oldTriggers.values()) {
                 triggers.add(trigger);
