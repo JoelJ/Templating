@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
 public class ImplementationBuildWrapper extends BuildWrapper implements Syncable {
 	private final String templateName;
 	private final String implementationName;
-	private final String variables;
+	private String variables;
     /**
      * Needed for backward compatibility with systems that used an older version of this plugin
      */
@@ -213,6 +213,11 @@ public class ImplementationBuildWrapper extends BuildWrapper implements Syncable
 	public String getVariables() {
 		return variables;
 	}
+
+
+    public void setVariables(String variables){
+        this.variables=variables;
+    }
 
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {

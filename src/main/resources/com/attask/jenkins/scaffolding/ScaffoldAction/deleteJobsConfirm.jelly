@@ -3,6 +3,7 @@
     <l:layout norefresh="true" title="Scaffolding">
         <st:include it="${app}" page="sidepanel.jelly" />
         <l:main-panel>
+            <font color="red">WARNING: You're well on your way to deleting a child Job!</font>
             <form action="deleteJobs" method="POST">
                 <input type="hidden" name="scaffoldName" value="${request.getParameter('scaffoldName')}" />
                 <input type="hidden" name="suffix" value="${request.getParameter('suffix')}" />

@@ -16,19 +16,21 @@ import java.io.IOException;
  * Date: 6/19/12
  * Time: 7:54 AM
  */
-//@Extension
-//public class SaveListener extends SaveableListener {
-//	@Override
-//	public void onChange(Saveable o, XmlFile file) {
-//		if(o instanceof BuildableItemWithBuildWrappers) {
-//			DescribableList<BuildWrapper,Descriptor<BuildWrapper>> buildWrappersList = ((BuildableItemWithBuildWrappers) o).getBuildWrappersList();
-//			for (BuildWrapper buildWrapper : buildWrappersList) {
-//				if(buildWrapper instanceof TemplateBuildWrapper) {
-//					((TemplateBuildWrapper) buildWrapper).setSynced(false);
-//				} else if(buildWrapper instanceof ImplementationBuildWrapper) {
-//					((ImplementationBuildWrapper) buildWrapper).setSynced(false);
-//				}
-//			}
-//		}
-//	}
-//}
+@Extension
+public class SaveListener extends SaveableListener {
+	@Override
+	public void onChange(Saveable o, XmlFile file) {
+		if(o instanceof BuildableItemWithBuildWrappers) {
+			DescribableList<BuildWrapper,Descriptor<BuildWrapper>> buildWrappersList = ((BuildableItemWithBuildWrappers) o).getBuildWrappersList();
+			for (BuildWrapper buildWrapper : buildWrappersList) {
+				if(buildWrapper instanceof TemplateBuildWrapper) {
+					onTemplateChanged((TemplateBuildWrapper) buildWrapper);
+				}
+			}
+		}
+	}
+
+    private void onTemplateChanged(TemplateBuildWrapper template) {
+
+    }
+}
